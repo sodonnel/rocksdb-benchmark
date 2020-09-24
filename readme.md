@@ -138,7 +138,7 @@ In my testing, and also noted on the [Flatbuffer benchmarks](https://google.gith
 
 ## A Directory Hierarchy DataSet
 
-In order to test random reads from RocksDB for this use case, we need a dataset is query. One can be generated such that we have a directory hierarchy which has N directories per level and is L levels deep. Starting at root we have level 1 which is:
+In order to test random reads from RocksDB for this use case, we need a dataset to query. One can be generated such that we have a directory hierarchy which has N directories per level and is L levels deep. Starting at root we have level 1 which is:
 
 ```
 /dir1
@@ -147,7 +147,7 @@ In order to test random reads from RocksDB for this use case, we need a dataset 
 /dirN
 ```
 
-Then in each of the directories, we create 5 sub-directories to create level 2 and repeat up to level 10:
+Then in each of the directories, we create N sub-directories to create level 2 and repeat up to level 10:
 
 ```
 /dir1/dir1
@@ -160,7 +160,7 @@ Then in each of the directories, we create 5 sub-directories to create level 2 a
 /dirN/dirN
 ```
 
-This generates about 12M entries. You can then walk the directory tree by picking a random integer between 1 and N at each level until no result is found, which gives 11 rocksDBs lookups per traverse - 10 returning a value and one returning null. This should also scatter reads all over the table, making this a worst case test. Normal application usage would tend to cluster around certain directory paths at a given time.
+This generates about 12M entries. You can then walk the directory tree by picking a random integer between 1 and N at each level until no result is found, which gives 11 RocksDB lookups per traverse - 10 returning a value and one returning null. This should also scatter reads all over the table, making this a worst case test. Normal application usage would tend to cluster around certain directory paths at a given time.
 
 The key is in the format:
 
@@ -229,7 +229,7 @@ In these tests, the RSS size of the process was less than the 4GB allocated to t
 
 ### Flatbuffer vs Protobuf Throughput
 
-Again testing with a 4GB RocksDB cache, we can see the relative performance of Flatbuffers vs Protobuf. Note that in this test, only a single value is accessed from the deserialised object, namely the inode / objectID. As we saw previously, this is a use case which strongly favours Flatbuffers. However, we know the Flatbuffer message size is about 240 bytes, vs 128 for Proto, which means the RocksDB retrieval overhead for Proto is less. Each test was run 3 times:
+Again testing with a 4GB RocksDB cache, we can see the relative performance of Flatbuffers vs Protobuf. Note that in this test, only a single value is accessed from the deserialised object, namely the iNode / objectID. As we saw previously, this is a use case which strongly favours Flatbuffers. However, we know the Flatbuffer message size is about 240 bytes, vs 128 for Proto, which means the RocksDB retrieval overhead for Proto is less. Each test was run 3 times:
 
 ```
 Benchmark                                        (tableName)   Mode  Cnt      Score      Error  Units
@@ -245,7 +245,7 @@ Flatbuffers are consistently faster, but not by a big margin.
 
 ### Serialisation Overhead
 
-Next we look at querying the Flatbuffer / Proto data, but accessing only the first 8 bytes as a long. This lets us see the RockDB throughput and the impact of deserilization.
+Next we look at querying the Flatbuffer / Proto data, but accessing only the first 8 bytes as a long. This lets us see the RockDB throughput and the impact of deserilisation.
 
 ```
 Benchmark                                        (tableName)   Mode  Cnt      Score      Error  Units
@@ -257,7 +257,7 @@ BenchmarkDirectoryWalk.walkRandomDirectory  FLAT_BUFFER_LONG  thrpt   20  21039.
 BenchmarkDirectoryWalk.walkRandomDirectory        PROTO_LONG  thrpt   20  22635.102 ± 1195.000  ops/s
 ```
 
-Comparing to the PROTO_LONG table, Flatbuffers are slower. Remember this is effectively retrieving raw bytes, and the Flatbuffers are bigger (240 vs 128 bytes). However, if you compare the PROTO LONG time against plain PROTO, you can see the overhead deserialising the Protobuf message adds. The difference for Flatbuffers is almost insignificant.
+Comparing to the PROTO_LONG table, Flatbuffers are slower. Remember this is effectively retrieving raw bytes, and the Flatbuffers are bigger (240 vs 128 bytes). However, if you compare the PROTO LONG time against plain PROTO, you can see the overhead deserialising the Protobuf message adds. The comparison for Flatbuffers shows deserialisation is almost insignificant.
 
 ### Undersized Cache
 
@@ -273,7 +273,7 @@ BenchmarkDirectoryWalk.walkRandomDirectory             PROTO  thrpt   20  19093.
 BenchmarkDirectoryWalk.walkRandomDirectory        PROTO_LONG  thrpt   20  23679.026 ±  326.160  ops/s
 ```
 
-Here the performance of Flatbuffers is much worse due to the undersized RocksDB cache.
+Here the performance of Flatbuffers is much worse due to the undersized RocksDB cache. As The Flatbuffer data size is much bigger less entries will fit into the cache and more disk access will occur.
 
 ### GC Pressure
 
@@ -364,7 +364,7 @@ BenchmarkDirectoryWalk.walkRandomDirectory:·gc.alloc.rate             PROTO  th
 BenchmarkDirectoryWalk.walkRandomDirectory:·gc.alloc.rate.norm        PROTO  thrpt   20  14704.013 ±    0.001    B/op
 ```
 
-Flatbuffers seem to be slightly faster and also allocate less memory in the JVM overall.
+Flatbuffers seem to be slightly faster and also allocates less memory in the JVM overall.
 
 ### Flame Charts
 
@@ -397,13 +397,13 @@ The time in `RockDBTable.find(...)` falls to 78.86% and in 13.18% in `findNextId
 
 ## Conclusion
 
-Each "walkRandomDirectory" test accesses RocksDB 11 times. On 10 of the calls it will get a value and follow the pointer to the next value. On the 11th turn it will find null, completing one traverse.
+Each `walkRandomDirectory` test accesses RocksDB 11 times. On 10 of the calls it will get a value and follow the pointer to the next value. On the 11th turn it will find null, completing one traverse.
 
 On a single thread, provided the working set fits in the Rocks block cache, 18 - 20k calls per second are possible. Which is 198 - 220k RocksDB lookups per second.
 
 The performance scales quite linearly to 8 threads, achieving 1.45 - 1.61M RocksDB accesses per second.
 
-Depending on locking in the application, RocksDB is unlikely to be a bottleneck.
+Depending on locking in the application, RocksDB is unlikely to be a bottleneck, provided the working set fits in the RocksDB cache.
 
 We also see the importance of keeping the serialised data as small as possible. The Protobuf message size requires less cache space, and less overhead when reading from RocksDB, but pays a price with higher deserialisation costs. In most tests, Flatbuffers were faster despite their larger size. Even for Protobuf, size matters, as a smaller message will be faster to parse.
 
