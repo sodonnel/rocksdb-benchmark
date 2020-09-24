@@ -2,16 +2,17 @@
 
 In [Ozone](https://hadoop.apache.org/ozone/), we have a use case for RocksDB, where we want to store a filesystem directory hierarchy in a RocksDB table. RocksDB is a key value store, so we store a directory name along with its parent iNode ID as the key, and the value is a serialised object holding details about the directory / object. For example:
 
+```
 0/dir1 -> { inodeID: 1, parentID: 0, ctime, mtime, name, owner, group, permissions, [ACLs] }
 0/dir2 -> { inodeID: 2, parentID: 0, ctime, mtime, name, owner, group, permissions, [ACLs] }
 ...
 1/dir1 -> { inodeID: 3, parentID: 1, ctime, mtime, name, owner, group, permissions, [ACLs] }
 1/dir2 -> { inodeID: 4, parentID: 1, ctime, mtime, name, owner, group, permissions, [ACLs] }
+```
 
+The above shows two directories at root - `/dir1`, with `ID=1` and `/dir2` with `ID=2`. Then `dir1`, has 2 subdirectories `/dir1/dir1`, `/dir1/dir2` and so on.
 
-The above shows two directories at root - /dir1, with ID=1 and /dir2 with ID=2. Then dir1, has 2 subdirectories /dir1/dir1, /dir1/dir2 and so on.
-
-To walk a given directory tree, eg /dir1/dir2/dir3, you start at the root and look for "0/dir1", then from the value, get the iNode ID, and look for ID/dir2, then ID/dir3. This requires 3 rocksDB lookups. This means that for very deep directory hierarchies, many rocksDB lookups will be required.
+To walk a given directory tree, eg `/dir1/dir2/dir3`, you start at the root and look for `0/dir1`, then from the value, get the iNodeID, and look for `ID/dir2`, then `ID/dir3`. This requires 3 rocksDB lookups. This means that for very deep directory hierarchies, many rocksDB lookups will be required.
 
 For this exercise, the write overhead is not much of a concern, as the data is likely to be written and then read many times.
 
