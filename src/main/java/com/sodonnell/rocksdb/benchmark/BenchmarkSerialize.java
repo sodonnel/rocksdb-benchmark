@@ -106,9 +106,7 @@ public class BenchmarkSerialize {
 
 
   public static void main(String[] args) throws Exception {
-    String[] myArgs = new String[1];
-    myArgs[0] = "BenchmarkSerialize";
-    org.openjdk.jmh.Main.main(myArgs);
+    org.openjdk.jmh.Main.main(args);
   }
 
   @Benchmark

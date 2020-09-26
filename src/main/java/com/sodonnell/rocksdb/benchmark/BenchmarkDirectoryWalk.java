@@ -24,8 +24,7 @@ public class BenchmarkDirectoryWalk {
   @State(Scope.Benchmark)
   public static class BenchmarkState {
    /// @Param({"LONG", "PADDING_50", "PADDING_100", "PADDING_150", "PADDING_200", "PADDING_250"})
-    @Param({"FLAT_BUFFER_LONG", "FLAT_BUFFER"})//, "PROTO", "PROTO_LONG"})
- //   @Param({"FLAT_BUFFER_LONG", "FLAT_BUFFER", "PROTO_LONG"})//, "LONG", "PROTO", "PROTO_LONG"})
+    @Param({"FLAT_BUFFER_LONG", "FLAT_BUFFER", "PROTO", "PROTO_LONG"})
     public String tableName;
 
     int cacheSize = 4096;
@@ -44,9 +43,7 @@ public class BenchmarkDirectoryWalk {
 
 
   public static void main(String[] args) throws Exception {
-    String[] myArgs = new String[1];
-    myArgs[0] = "BenchmarkDirectoryWalk";
-    org.openjdk.jmh.Main.main(myArgs);
+    org.openjdk.jmh.Main.main(args);
   }
 
   @Benchmark
