@@ -1,0 +1,40 @@
+syntax = "proto2";
+
+package rocksdb.proto;
+
+option java_package = "com.sodonnell.rocksdb.proto";
+option java_outer_classname = "DirectoryInfoProtos";
+
+enum AclScope {
+  ACCESS  = 0;
+  DEFAULT = 1;
+}
+
+enum AclType {
+  USER = 0;
+  GROUP = 1;
+  MASK = 2;
+  OTHER = 3;
+}
+
+message Acl {
+  required string name = 1;
+  required AclType type = 2;
+  required AclScope scope = 3;
+  required int32 permissions = 4;
+  
+}
+
+message DirectoryInfo {
+  required uint64 objectId = 1;
+  required uint64 updateId = 2;
+  required uint64 parentId = 3;
+  required uint64 creationTime = 4;
+  required uint64 modificationTime = 5;
+  required string name = 6;
+  required string owner = 7;
+  required string group = 8;
+  required int32 permission = 9;
+  repeated Acl acls = 10; 
+}
+

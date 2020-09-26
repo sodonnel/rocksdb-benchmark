@@ -1,0 +1,26 @@
+namespace com.sodonnell.rocksdb.flatbuffer;
+
+enum AclScope : byte { ACCESS, DEFAULT }
+enum AclType : byte { USER, GROUP, MASK, OTHER }
+
+table Acl {
+  name:string;
+  type:AclType;
+  scope:AclScope;
+  permissions:short;
+}
+
+table DirectoryInfo {
+  objectId:long;
+  updateId:long;
+  parentId:long;
+  creationTime:long;
+  modificationTime:long;
+  name:string;
+  owner:string;
+  group:string;
+  permissions:short;
+  acls:[Acl];
+}
+
+root_type DirectoryInfo;
