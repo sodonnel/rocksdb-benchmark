@@ -29,7 +29,7 @@ In the benchmarks I passed 5 for `dirs_per_level` and 10 for `levels`. This will
 
 To query the generated data, by traversing a random series of directories and sub-directories, run:
 
-    java com.sodonnell.rocksdb.query.Query /path/to/rocksdb dirs_per_level levels Table_to_Query
+    java com.sodonnell.rocksdb.query.Query /path/to/rocksdb dirs_per_level levels Table_to_Query rocksDB_cache_size_in_MB
 
 You should pass the same value for `dirs_per_level` and `levels` as used in the Generate step. Running the above does not provide any output, but provided the table will be queried for random entries forever. Based on the value passed for `levels`, the query tool expects that may rocksDB looks to be performed per query, and if there are not, it will throw an exception. The purpose of this tool, is to validate the tables are being queried OK, and to allow flame charts to be captured.
 
@@ -48,6 +48,8 @@ If you don't pass the classname as a parameter, all JMH annotated classes will b
 
 Note that for `BenchmarkDirectoryWalk` the path to the RocksDB base directory is hardcoded as `/tmp/rocksdb` and the tables which are queries are hardcoded as:
 
-    @Param({"FLAT_BUFFER_LONG", "FLAT_BUFFER", "PROTO", "PROTO_LONG"})
+@Param({"FLAT_BUFFER_LONG", "FLAT_BUFFER", "PROTO", "PROTO_LONG"})
+
+The RocksDB cache size is hardcoded to 4096mb.
 
 Edit these values in the class and recompile if they need to be changed.
